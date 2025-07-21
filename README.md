@@ -36,8 +36,8 @@ Criar backend que dado um objeto ele consulte uma api externa para completar os 
 **ENTÃO** devolver o erro de cep invalido, e logar como ERROR
  
 Objetos:
+*cliente*
 ```json
-**cliente**
 {
     "cpf": "string (required)",
     "nome": "string (required)",
