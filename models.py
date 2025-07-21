@@ -7,7 +7,7 @@ class Cliente(BaseModel):
 
 class ClienteEndereco(BaseModel):
     cpf: str
-    cep: int
+    cep: str
     state: str
     city: str
     neighborhood: str

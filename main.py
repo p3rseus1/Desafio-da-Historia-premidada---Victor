@@ -39,7 +39,7 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
     url = f"https://brasilapi.com.br/api/cep/v1/{teste}"
 
     try:
-        async with httpx.AsyncClient(timeout=10.0, verify=False) as client:
+        async with httpx.AsyncClient(timeout=10.0, verify=False, proxy="http://192.168.127.254:3128") as client:
             response = await client.get(url)
         response.raise_for_status()
         data = response.json()
