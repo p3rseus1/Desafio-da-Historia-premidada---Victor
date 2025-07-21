@@ -1,8 +1,5 @@
 # Desafio-da-Historia-premidada
 
-<<<<<<< HEAD
-Desafio para criar uma api que retorna dados de endereço para usuário.
-=======
 ## Historia
  
 Criar backend que dado um objeto ele consulte uma api externa para completar os dados do correntista.
@@ -67,4 +64,3 @@ docker build -t fastapi-cep-app .
 docker run -p 8000:8000 fastapi-cep-app
 ```
 Agora, basta acessar o endereço http://localhost:8000/docs no navegador para testar a api através do swagger ui.
->>>>>>> main

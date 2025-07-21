@@ -4,12 +4,13 @@ import httpx
 import logging
 from httpx import ConnectTimeout, HTTPStatusError
 import time
-
+from dotenv import load_dotenv
+import os
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
-
+load_dotenv()
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -39,7 +40,8 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
     url = f"https://brasilapi.com.br/api/cep/v1/{strcep}"
 
     try:
-        async with httpx.AsyncClient(timeout=10.0, verify=False, proxy="http://192.168.127.254:3128") as client:
+        proxy_usu=os.getenv("PROXY")
+        async with httpx.AsyncClient(verify=False, proxy=proxy_usu) as client:
             response = await client.get(url)
         response.raise_for_status()
         data = response.json()
