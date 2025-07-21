@@ -30,13 +30,13 @@ async def log_requests(request: Request, call_next):
 @app.get("/cliente-endereco", response_model=ClienteEndereco)
 async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), cep: int = Query(...)):
     cliente = Cliente(cpf=cpf, nome=nome, cep=cep)
-    teste=str(cliente.cep)
-    t=len(teste)
+    strcep=str(cliente.cep)
+    t=len(strcep)
     if t<8:
         for _ in range(8-t):
-            teste='0'+teste
+            strcep='0'+strcep
 
-    url = f"https://brasilapi.com.br/api/cep/v1/{teste}"
+    url = f"https://brasilapi.com.br/api/cep/v1/{strcep}"
 
     try:
         async with httpx.AsyncClient(timeout=10.0, verify=False, proxy="http://192.168.127.254:3128") as client:
@@ -47,7 +47,7 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
         logger.error("Timeout ao conectar com a BrasilAPI")
         raise HTTPException(status_code=504, detail="Timeout ao conectar com a BrasilAPI")
     except HTTPStatusError:
-        logger.error(f"CEP inválido: {cliente.cep}")
+        logger.error(f"CEP inválido: {strcep}")
         raise HTTPException(status_code=400, detail="CEP inválido")
     except Exception as e:
         logger.error(f"Erro inesperado: {e}")
@@ -55,7 +55,7 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
     
     return ClienteEndereco(
         cpf=cliente.cpf,
-        cep=teste,
+        cep=strcep,
         state=data.get("state", ""),
         city=data.get("city", ""),
         neighborhood=data.get("neighborhood", ""),
