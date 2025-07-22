@@ -18,15 +18,27 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     process_time = (time.time() - start_time) * 1000
 
+    
+    # Determina o nível de log com base no status HTTP
+    if response.status_code == 200:
+        log_status = "INFO"
+    elif response.status_code in (400, 404):
+        log_status = "ERROR"
+    elif response.status_code == 503:  # Exemplo para sem conexão
+        log_status = "CRITICAL"
+    else:
+        log_status = "WARNING"  # Para outros casos não previstos
+
+
     logger.info(
         f"{request.method} {request.url.path} - "
-        f"Status: {response.status_code} - "
+        f"Status HTTP: {response.status_code} - "
+        f"Status log: {log_status} - "
         f"Tempo: {process_time:.2f}ms - "
         f"Query: {dict(request.query_params)}"
     )
 
     return response
-
 
 @app.get("/cliente-endereco", response_model=ClienteEndereco)
 async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), cep: int = Query(...)):
@@ -41,26 +53,33 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
 
     try:
         proxy_usu=os.getenv("PROXY")
+        print(proxy_usu)
         async with httpx.AsyncClient(verify=False, proxy=proxy_usu) as client:
             response = await client.get(url)
         response.raise_for_status()
+
         data = response.json()
+        status_http = str(response.status_code)
+
+        if status_http == "200":
+            return {
+                "cpf": cpf,
+                "cep": strcep,
+                "state": data.get("state"),
+                "city": data.get("city"),
+                "neighborhood": data.get("neighborhood"),
+                "street": data.get("street"),
+                "service": data.get("service", "viacep")
+            } 
     except ConnectTimeout:
         logger.error("Timeout ao conectar com a BrasilAPI")
         raise HTTPException(status_code=504, detail="Timeout ao conectar com a BrasilAPI")
-    except HTTPStatusError:
-        logger.error(f"CEP inválido: {strcep}")
-        raise HTTPException(status_code=400, detail="CEP inválido")
+    except HTTPStatusError as e:
+        if str(e.response.status_code) == "400":
+            raise HTTPException(status_code=400, detail="O número de caracteres está incorreto.")
+        if str(e.response.status_code) == "404":
+            raise HTTPException(status_code=404, detail="O CEP inserido não existe.")
+        raise HTTPException(status_code=400, detail="Erro não informado.")
     except Exception as e:
         logger.error(f"Erro inesperado: {e}")
         raise HTTPException(status_code=500, detail="Erro interno no servidor")
-    
-    return ClienteEndereco(
-        cpf=cliente.cpf,
-        cep=strcep,
-        state=data.get("state", ""),
-        city=data.get("city", ""),
-        neighborhood=data.get("neighborhood", ""),
-        street=data.get("street", ""),
-        service=data.get("service", "")
-    )

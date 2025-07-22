@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# =============================================================================================================================
+# Script em bash para "automatizar ativar o ambiente virtual, instalar bibliotecas e iniciar o servidor web em ambiente local."
+# =============================================================================================================================
+
 DIRETORIO=$(pwd)/venv
 RAIZ=$(pwd)
 
@@ -51,4 +55,4 @@ fi
 source ./venv/bin/activate
 
 # executa o servidor web 
-uvicorn main:app --reload
+uvicorn main:app --reload --port 8001
