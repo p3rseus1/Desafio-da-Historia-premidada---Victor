@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException, Query, Request
-from models import Cliente, ClienteEndereco
 import httpx
 import logging
 from httpx import ConnectTimeout, HTTPStatusError
@@ -18,17 +17,13 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     process_time = (time.time() - start_time) * 1000
 
-    
     # Determina o nível de log com base no status HTTP
     if response.status_code == 200:
         log_status = "INFO"
     elif response.status_code in (400, 404):
         log_status = "ERROR"
-    elif response.status_code == 504:  # Exemplo para sem conexão
+    else:  # Exemplo para sem conexão
         log_status = "CRITICAL"
-    else:
-        log_status = "WARNING" 
-
 
     logger.info(
         f"{request.method} {request.url.path} - "
@@ -40,10 +35,13 @@ async def log_requests(request: Request, call_next):
 
     return response
 
-@app.get("/cliente-endereco", response_model=ClienteEndereco)
+@app.get("/cliente-endereco")
 async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), cep: int = Query(...)):
-    cliente = Cliente(cpf=cpf, nome=nome, cep=cep)
-    strcep=str(cliente.cep)
+    # verifica a quantidade de caracteres do CPF.
+    if len(cpf) < 11 or len(cpf) > 11:
+        raise HTTPException(status_code=400, detail="O CPF é inválido!")
+
+    strcep=str(cep)
     t=len(strcep)
     if t<8:
         for _ in range(8-t):
@@ -53,7 +51,9 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
 
     try:
         proxy_usu=os.getenv("PROXY")
+        # para depuração
         print(proxy_usu)
+
         async with httpx.AsyncClient(timeout=10.0, verify=False, proxy=proxy_usu) as client:
             response = await client.get(url)
         response.raise_for_status()
@@ -71,15 +71,20 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
                 "street": data.get("street"),
                 "service": data.get("service", "viacep")
             } 
+
     except ConnectTimeout:
         logger.error("Timeout ao conectar com a BrasilAPI")
         raise HTTPException(status_code=504, detail="Timeout ao conectar com a BrasilAPI")
+
     except HTTPStatusError as e:
         if str(e.response.status_code) == "400":
-            raise HTTPException(status_code=400, detail="O número de caracteres está incorreto.")
+            raise HTTPException(status_code=400, detail="O número de caracteres do CEP está incorreto.")
+
         if str(e.response.status_code) == "404":
             raise HTTPException(status_code=404, detail="O CEP inserido não existe.")
+
         raise HTTPException(status_code=400, detail="Erro não informado.")
+
     except Exception as e:
         logger.error(f"Erro inesperado: {e}")
         raise HTTPException(status_code=500, detail="Erro interno no servidor")

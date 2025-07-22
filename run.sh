@@ -30,6 +30,8 @@ if [ -d "$DIRETORIO" ];
 then
     echo "$DIRETORIO já criado!"
 else
+    pip freeze > requirements.txt
+
     python3 -m venv venv
 
     if [ $? -eq 0 ];
@@ -40,11 +42,15 @@ else
             exit 1
     fi
 
+    # ativa o ambiente virtual
+    source ./venv/bin/activate
+
     pip install -r requirements.txt
 
     if [ $? -eq 0 ];
     then
             echo "Bibliotecas necessárias instaladas com sucesso!"
+            deactivate
         else 
             echo "Deu algum erro, parando execução do bash."
             exit 1

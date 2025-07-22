@@ -12,7 +12,7 @@ ENV HTTPS_PROXY=${PROXY}
 WORKDIR /app
 
 # Copy application files
-COPY main.py models.py requirements.txt ./
+COPY main.py requirements.txt ./
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
