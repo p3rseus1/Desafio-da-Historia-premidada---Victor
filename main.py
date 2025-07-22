@@ -24,10 +24,10 @@ async def log_requests(request: Request, call_next):
         log_status = "INFO"
     elif response.status_code in (400, 404):
         log_status = "ERROR"
-    elif response.status_code == 503:  # Exemplo para sem conexão
+    elif response.status_code == 504:  # Exemplo para sem conexão
         log_status = "CRITICAL"
     else:
-        log_status = "WARNING"  # Para outros casos não previstos
+        log_status = "WARNING" 
 
 
     logger.info(
@@ -54,7 +54,7 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
     try:
         proxy_usu=os.getenv("PROXY")
         print(proxy_usu)
-        async with httpx.AsyncClient(verify=False, proxy=proxy_usu) as client:
+        async with httpx.AsyncClient(timeout=10.0, verify=False, proxy=proxy_usu) as client:
             response = await client.get(url)
         response.raise_for_status()
 
