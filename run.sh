@@ -30,8 +30,6 @@ if [ -d "$DIRETORIO" ];
 then
     echo "$DIRETORIO já criado!"
 else
-    pip freeze > requirements.txt
-
     python3 -m venv venv
 
     if [ $? -eq 0 ];
