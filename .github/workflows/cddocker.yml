@@ -17,6 +17,8 @@ jobs:
     # A máquina virtual onde o job será executado. 'ubuntu-latest' é uma escolha padrão e segura.
     runs-on: ubuntu-latest
 
+    environment: DOCKERHUB_ENV
+    
     # Os passos (steps) que compõem o job.
     steps:
       # 1. Checkout do código
