@@ -1,63 +1,39 @@
 # Nome do workflow que aparecerá na aba "Actions" do GitHub
-name: Publicar Imagem Docker
+name: Publicar Imagem no Docker Hub
 
-# Define o gatilho (trigger) do workflow.
-# Este workflow será executado sempre que uma nova tag for "empurrada" (push)
-# para o repositório. O filtro 'v*' significa que só funcionará para tags
-# que começam com 'v', como v1.0, v1.2.1, etc.
 on:
   push:
     tags:
       - 'v*'
 
-# Define os "trabalhos" (jobs) a serem executados.
 jobs:
-  # Nome do job. Pode ser qualquer nome.
-  build-and-push-docker-image:
-    # A máquina virtual onde o job será executado. 'ubuntu-latest' é uma escolha padrão e segura.
+  build-and-push:
     runs-on: ubuntu-latest
-
     environment: DOCKERHUB_ENV
-    
-    # Os passos (steps) que compõem o job.
     steps:
-      # 1. Checkout do código
-      # Baixa o código do seu repositório para a máquina virtual do workflow.
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      # 2. Login no Docker Hub
-      # Usa a Action oficial do Docker para fazer login de forma segura,
-      # utilizando os segredos que configuramos no Passo 1.
+      # Passo 2: Login no Docker Hub
+      # Este passo usa os segredos para autenticar. É aqui que o erro acontecia.
       - name: Login no Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # Usamos o TOKEN como senha
 
-      # 3. Extrair metadados (como tags e labels) da imagem Docker
-      # Esta Action inteligente extrai o nome da tag do Git (ex: v1.0.0)
-      # e a prepara para ser usada como a tag da imagem Docker.
+      # Passo 3: Extrair metadados (tags)
       - name: Extrair metadados da imagem
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # Define o nome da imagem no Docker Hub.
-          # Formato: seu-usuario/nome-do-repositorio
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/minha-api-fastapi
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/minha-api-fastapi # Verifique se este nome está correto
 
-      # 4. Construir e empurrar (push) a imagem Docker
-      # Esta é a Action principal que executa 'docker build' e 'docker push'.
+      # Passo 4: Construir e empurrar a imagem
       - name: Construir e empurrar a imagem para o Docker Hub
         uses: docker/build-push-action@v6
         with:
-          # O contexto de build (o '.' significa a raiz do repositório).
           context: .
-          # Informa para realmente fazer o push após o build.
           push: true
-          # Usa as tags geradas pelo passo de metadados.
-          # Isso fará com que a imagem Docker tenha a mesma tag do Git (ex: 1.0.0)
-          # e também a tag 'latest'.
           tags: ${{ steps.meta.outputs.tags }}
-          # Adiciona labels à imagem, o que é uma boa prática.
           labels: ${{ steps.meta.outputs.labels }}
