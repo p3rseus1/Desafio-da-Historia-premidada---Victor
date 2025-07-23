@@ -6,10 +6,12 @@ import time
 from dotenv import load_dotenv
 import os
 
+load_dotenv()
+
 app = FastAPI()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
-load_dotenv()
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -37,7 +39,6 @@ async def log_requests(request: Request, call_next):
 
 @app.get("/cliente-endereco")
 async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), cep: int = Query(...)):
-    # verifica a quantidade de caracteres do CPF.
     if len(cpf) < 11 or len(cpf) > 11:
         raise HTTPException(status_code=400, detail="O CPF é inválido!")
 
@@ -54,12 +55,14 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
         # para depuração
         print(proxy_usu)
 
-        async with httpx.AsyncClient(timeout=10.0, verify=False, proxy=proxy_usu) as client:
+        async with httpx.AsyncClient(timeout=10.0, verify=False) as client:
             response = await client.get(url)
         response.raise_for_status()
 
         data = response.json()
         status_http = str(response.status_code)
+
+        print(f"Status HTTP: {status_http}")
 
         if status_http == "200":
             return {
@@ -86,5 +89,4 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
         raise HTTPException(status_code=400, detail="Erro não informado.")
 
     except Exception as e:
-        logger.error(f"Erro inesperado: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno no servidor")
+        raise HTTPException(status_code=500, detail="Erro interno no servidor") 
