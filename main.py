@@ -6,10 +6,12 @@ import time
 from dotenv import load_dotenv
 import os
 
+load_dotenv()
+
 app = FastAPI()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
-load_dotenv()
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -35,6 +37,7 @@ async def log_requests(request: Request, call_next):
 
     return response
 
+# ex: http://localhost:8000/cliente-endereco?cpf=11345678900&nome=Joao&cep=72145000
 @app.get("/cliente-endereco")
 async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), cep: int = Query(...)):
     # verifica a quantidade de caracteres do CPF.
@@ -50,11 +53,18 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
     url = f"https://brasilapi.com.br/api/cep/v1/{strcep}"
 
     try:
-        proxy_usu=os.getenv("PROXY")
-        # para depuração
+        proxy_usu=os.getenv("PROXY")      
         print(proxy_usu)
+        # Monta os argumentos dinamicamente
+        client_args = {
+            "timeout": 10.0,
+            "verify": False
+        }
 
-        async with httpx.AsyncClient(timeout=10.0, verify=False, proxy=proxy_usu) as client:
+        if proxy_usu:
+            client_args["proxy"] = proxy_usu
+
+        async with httpx.AsyncClient(**client_args) as client:
             response = await client.get(url)
         response.raise_for_status()
 
