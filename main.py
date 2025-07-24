@@ -55,6 +55,7 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
     try:
         proxy_usu=os.getenv("PROXY")      
         print(proxy_usu)
+        
         # Monta os argumentos dinamicamente
         client_args = {
             "timeout": 10.0,
