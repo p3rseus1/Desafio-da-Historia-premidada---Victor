@@ -1,6 +1,8 @@
 # Nome do workflow que aparecerá na aba "Actions" do GitHub
 name: Publicar Imagem no Docker Hub
 
+
+# limitar para branch main, pois ele sobre para qualquer branch
 on:
   push:
     tags:
