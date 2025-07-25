@@ -50,11 +50,19 @@ async def get_cliente_endereco(cpf: str = Query(...), nome: str = Query(...), ce
     url = f"https://brasilapi.com.br/api/cep/v1/{strcep}"
 
     try:
-        proxy_usu=os.getenv("PROXY")
-        # para depuração
+        proxy_usu=os.getenv("PROXY")      
         print(proxy_usu)
 
-        async with httpx.AsyncClient(timeout=10.0, verify=False, proxy=proxy_usu) as client:
+        # Monta os argumentos dinamicamente
+        client_args = {
+            "timeout": 10.0,
+            "verify": False
+        }
+
+        if proxy_usu:
+            client_args["proxy"] = proxy_usu
+
+        async with httpx.AsyncClient(**client_args) as client:
             response = await client.get(url)
         response.raise_for_status()
 
