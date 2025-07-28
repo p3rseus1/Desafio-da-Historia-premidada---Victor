@@ -26,10 +26,38 @@ else
 fi
 
 # verifica se existe um diretorio de ambiente virtual na sua máquina
-if [ -d "$DIRETORIO" ];
-then
+if [ -d "$DIRETORIO" ]; then
     echo "$DIRETORIO já criado!"
+
+    # Ativa o ambiente virtual
+    source "$DIRETORIO/bin/activate"
+
+    # Lista os pacotes instalados
+    INSTALADOS=$(pip freeze | cut -d'=' -f1 | tr '[:upper:]' '[:lower:]')
+
+    # Lê os pacotes do requirements.txt
+    while IFS= read -r linha; do
+        # Ignora comentários e linhas vazias
+        [[ "$linha" =~ ^#.*$ || -z "$linha" ]] && continue
+
+        pacote=$(echo "$linha" | cut -d'=' -f1 | tr '[:upper:]' '[:lower:]')
+
+        if ! echo "$INSTALADOS" | grep -q "^$pacote$"; then
+            echo "Instalando pacote ausente: $linha"
+            pip install "$linha"
+            if [ $? -ne 0 ]; then
+                echo "Erro ao instalar $linha. Encerrando."
+                deactivate
+                exit 1
+            fi
+        fi
+    done < requirements.txt
+
+    echo "Verificação de dependências concluída."
+    deactivate
+
 else
+    echo "Criando ambiente virtual..."
     python3 -m venv venv
 
     if [ $? -eq 0 ];
@@ -51,6 +79,7 @@ else
             deactivate
         else 
             echo "Deu algum erro, parando execução do bash."
+            deactivate
             exit 1
     fi
 fi
