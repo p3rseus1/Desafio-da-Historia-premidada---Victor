@@ -4,10 +4,6 @@ FROM python:3.11-slim
 # Argumentos de build para proxy
 ARG PROXY
 
-# Variáveis de ambiente para proxy em tempo de execução
-ENV HTTP_PROXY=${PROXY}
-ENV HTTPS_PROXY=${PROXY}
-
 # Set working directory
 WORKDIR /app
 
